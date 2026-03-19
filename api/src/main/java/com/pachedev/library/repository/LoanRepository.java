@@ -7,4 +7,8 @@ import com.pachedev.library.model.Loan;
 public interface LoanRepository extends JpaRepository<Loan, Long> {
 
     int countByUserId(Long id);
+
+    boolean existsByBookIdAndReturnDateIsNull(Long bookId);
+
+    long countByUserIdAndReturnDateIsNull(Long userId);
 }

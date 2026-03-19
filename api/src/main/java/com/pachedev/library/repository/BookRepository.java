@@ -12,5 +12,5 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     List<Book> findByAuthorAndPages(String author, Integer pages);
 
-    List<Book> findByPagesBetween(int min, int max);
+    List<Book> findByPagesBetween(Integer min, Integer max);
 }

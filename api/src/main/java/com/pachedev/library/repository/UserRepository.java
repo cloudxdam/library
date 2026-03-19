@@ -6,4 +6,6 @@ import com.pachedev.library.model.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    boolean existsByEmail(String email);
+
 }

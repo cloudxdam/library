@@ -30,6 +30,6 @@ public class Book {
     @Column(name = "isbn", unique = true, nullable = false, length = 20)
     private String isbn;
 
-    @Column(name = "pages")
+    @Column(name = "pages", nullable = false)
     private Integer pages;
 }
