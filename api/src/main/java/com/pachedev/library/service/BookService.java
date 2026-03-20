@@ -51,7 +51,7 @@ public class BookService {
         bookRepository.delete(existingBook);
     }
 
-    public List<Book> findByAuthorAndPages(String author, int pages) {
+    public List<Book> findByAuthorAndPages(String author, Integer pages) {
         return bookRepository.findByAuthorAndPages(author, pages);
     }
 
