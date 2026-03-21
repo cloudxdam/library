@@ -32,28 +32,35 @@ public class LoanService {
 
     public Loan findById(Long id) {
         return loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found loan with Id: " + id));
+                .orElseThrow(() -> new RuntimeException("Loan not found with Id: " + id));
     }
 
     public List<Loan> findAll() {
         return loanRepository.findAll();
     }
 
-    public Loan update(Long id, Loan updated) {
+    public Loan updateLoanDate(Long id, Loan updated) {
         Loan existingLoan = findById(id);
         existingLoan.setLoanDate(updated.getLoanDate());
-        existingLoan.setReturnDate(updated.getReturnDate());
         return loanRepository.save(existingLoan);
     }
 
     public Loan returnLoan(Long id) {
         Loan existingLoan = findById(id);
+
+        if (existingLoan.getReturnDate() != null) {
+            throw new IllegalArgumentException("This loan has been already returned");
+        }
         existingLoan.setReturnDate(LocalDate.now());
         return loanRepository.save(existingLoan);
     }
 
     public void delete(Long id) {
         Loan existingLoan = findById(id);
+
+        if (existingLoan.getReturnDate() == null) {
+            throw new IllegalArgumentException("Cannot delete an active loan");
+        }
         loanRepository.delete(existingLoan);
     }
 }
