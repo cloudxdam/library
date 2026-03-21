@@ -1,6 +1,7 @@
 package com.pachedev.library.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -37,19 +38,39 @@ public class UserService {
     public User update(Long id, User updatedUser) {
         User existingUser = findById(id);
 
-        if (!updatedUser.getEmail().equals(existingUser.getEmail())
-                && userRepository.existsByEmail(updatedUser.getEmail())) {
-            throw new IllegalArgumentException("A user with email " + updatedUser.getEmail() + " already exists");
-        }
+        validateEmailForUpdate(updatedUser.getEmail(), existingUser);
         existingUser.setName(updatedUser.getName());
         existingUser.setEmail(updatedUser.getEmail());
+        return userRepository.save(existingUser);
+    }
+
+    private void validateEmailForUpdate(String newEmail, User existingUser) {
+        if (!newEmail.equals(existingUser.getEmail())
+                && userRepository.existsByEmail(newEmail)) {
+            throw new IllegalArgumentException("A user with email " + newEmail + " already exists");
+        }
+    }
+
+    public User patchUser(Long id, Map<String, Object> updates) {
+        User existingUser = findById(id);
+
+        if (updates.containsKey("name")) {
+            existingUser.setName((String) updates.get("name"));
+        }
+
+        if (updates.containsKey("email")) {
+            String newEmail = (String) updates.get("email");
+            validateEmailForUpdate(newEmail, existingUser);
+            existingUser.setEmail(newEmail);
+        }
+
         return userRepository.save(existingUser);
     }
 
     public void delete(Long id) {
         User existingUser = findById(id);
 
-        if (loanRepository.existsByBookIdAndReturnDateIsNull(id)) {
+        if (loanRepository.existsByUserIdAndReturnDateIsNull(id)) {
             throw new IllegalArgumentException("Cannot delete user with active loans");
         }
         userRepository.delete(existingUser);
