@@ -63,6 +63,17 @@ public class BookController {
         }
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> patchBook(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        try {
+            return ResponseEntity.ok(bookService.patchUpdate(id, updates));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteBook(@PathVariable Long id) {
         try {
@@ -83,16 +94,5 @@ public class BookController {
     @GetMapping("/range")
     public List<Book> findByPagesBetween(@RequestParam Integer min, @RequestParam Integer max) {
         return bookService.findByPagesBetween(min, max);
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<?> patchBook(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
-        try {
-            return ResponseEntity.ok(bookService.patchUpdate(id, updates));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
     }
 }
