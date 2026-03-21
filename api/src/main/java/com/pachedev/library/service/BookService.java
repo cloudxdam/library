@@ -1,6 +1,7 @@
 package com.pachedev.library.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -35,15 +36,50 @@ public class BookService {
     public Book update(Long id, Book updatedBook) {
         Book existingBook = findById(id);
 
-        if (!updatedBook.getIsbn().equals(existingBook.getIsbn())
-                && bookRepository.existsByIsbn(updatedBook.getIsbn())) {
-            throw new IllegalArgumentException("A book with ISBN " + updatedBook.getIsbn() + " already exists");
-        }
+        validateIsbnForUpdate(updatedBook.getIsbn(), existingBook);
         existingBook.setTitle(updatedBook.getTitle());
         existingBook.setAuthor(updatedBook.getAuthor());
         existingBook.setIsbn(updatedBook.getIsbn());
         existingBook.setPages(updatedBook.getPages());
         return bookRepository.save(existingBook);
+    }
+
+    private void validateIsbnForUpdate(String newIsbn, Book existingBook) {
+        if (!newIsbn.equals(existingBook.getIsbn())
+                && bookRepository.existsByIsbn(newIsbn)) {
+            throw new IllegalArgumentException("A book with ISBN " + newIsbn + " already exists");
+        }
+    }
+
+    public Book patchUpdate(Long id, Map<String, Object> updates) {
+        Book existingBook = findById(id);
+
+        if (updates.containsKey("title")) {
+            existingBook.setTitle((String) updates.get("title"));
+        }
+
+        if (updates.containsKey("author")) {
+            existingBook.setAuthor((String) updates.get("author"));
+        }
+
+        if (updates.containsKey("isbn")) {
+            String newIsbn = (String) updates.get("isbn");
+            validateIsbnForUpdate(newIsbn, existingBook);
+            existingBook.setIsbn(newIsbn);
+        }
+
+        if (updates.containsKey("pages")) {
+            Object value = updates.get("pages");
+
+            if (value instanceof Number) {
+                existingBook.setPages(((Number) value).intValue());
+            } else {
+                throw new IllegalArgumentException("Pages must be a number");
+            }
+        }
+
+        return bookRepository.save(existingBook);
+
     }
 
     public void delete(Long id) {
