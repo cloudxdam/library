@@ -1,6 +1,7 @@
 package com.pachedev.library.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,20 +29,20 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<Book> createBook(@RequestBody Book newBook) {
+    public ResponseEntity<?> createBook(@RequestBody Book newBook) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(bookService.create(newBook));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Book> findBookById(@PathVariable Long id) {
+    public ResponseEntity<?> findBookById(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(bookService.findById(id));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -51,23 +52,25 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book updatedBook) {
+    public ResponseEntity<?> updateBook(@PathVariable Long id, @RequestBody Book updatedBook) {
         try {
             return ResponseEntity.ok(bookService.update(id, updatedBook));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Book> deleteBook(@PathVariable Long id) {
+    public ResponseEntity<?> deleteBook(@PathVariable Long id) {
         try {
             bookService.delete(id);
             return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
 
