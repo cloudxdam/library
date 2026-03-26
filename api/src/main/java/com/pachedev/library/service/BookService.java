@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.pachedev.library.dto.book.BookResponse;
 import com.pachedev.library.dto.book.CreateBookRequest;
+import com.pachedev.library.dto.book.ReplaceBookRequest;
 import com.pachedev.library.dto.book.UpdateBookRequest;
 import com.pachedev.library.mapper.BookMapper;
 import com.pachedev.library.model.Book;
@@ -52,16 +53,14 @@ public class BookService {
         return book;
     }
 
-    public BookResponse update(Long id, UpdateBookRequest request) {
+    public BookResponse update(Long id, ReplaceBookRequest request) {
         Book existingBook = findBookEntityById(id);
 
-        if (request.isbn() != null) {
-            validateIsbnForUpdate(request.isbn(), existingBook);
-        }
+        validateIsbnForUpdate(request.isbn(), existingBook);
 
-        bookMapper.updateEntityFromRequest(request, existingBook);
-
+        bookMapper.replaceEntityFromRequest(request, existingBook);
         Book updatedBook = bookRepository.save(existingBook);
+
         return bookMapper.toResponse(updatedBook);
     }
 

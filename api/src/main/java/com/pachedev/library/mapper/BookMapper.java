@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.pachedev.library.dto.book.BookResponse;
 import com.pachedev.library.dto.book.CreateBookRequest;
+import com.pachedev.library.dto.book.ReplaceBookRequest;
 import com.pachedev.library.dto.book.UpdateBookRequest;
 import com.pachedev.library.model.Book;
 
@@ -52,5 +53,16 @@ public class BookMapper {
         if (request.pages() != null) {
             book.setPages(request.pages());
         }
+    }
+
+    public void replaceEntityFromRequest(ReplaceBookRequest request, Book book) {
+        if (request == null || book == null) {
+            return;
+        }
+
+        book.setTitle(request.title());
+        book.setAuthor(request.author());
+        book.setIsbn(request.isbn());
+        book.setPages(request.pages());
     }
 }

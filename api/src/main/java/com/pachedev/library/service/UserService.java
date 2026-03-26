@@ -1,10 +1,15 @@
 package com.pachedev.library.service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.pachedev.library.dto.user.CreateUserRequest;
+import com.pachedev.library.dto.user.ReplaceUserRequest;
+import com.pachedev.library.dto.user.UpdateUserRequest;
+import com.pachedev.library.dto.user.UserResponse;
+import com.pachedev.library.mapper.UserMapper;
 import com.pachedev.library.model.User;
 import com.pachedev.library.repository.LoanRepository;
 import com.pachedev.library.repository.UserRepository;
@@ -14,34 +19,55 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final LoanRepository loanRepository;
+    private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository, LoanRepository loanRepository) {
+    public UserService(UserRepository userRepository, LoanRepository loanRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.loanRepository = loanRepository;
+        this.userMapper = userMapper;
     }
 
-    public User create(User newUser) {
-        if (userRepository.existsByEmail(newUser.getEmail())) {
-            throw new IllegalArgumentException("A user with email " + newUser.getEmail() + " already exists");
+    public UserResponse create(CreateUserRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new IllegalArgumentException("A user with email " + request.email() + " already exists");
         }
-        return userRepository.save(newUser);
+        User newUser = userMapper.toEntity(request);
+        User savedUser = userRepository.save(newUser);
+
+        return userMapper.toResponse(savedUser);
     }
 
-    public User findById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("Not found user with Id: " + id));
+    public UserResponse findById(Long id) {
+        User user = findUserEntityById(id);
+        return userMapper.toResponse(user);
     }
 
-    public List<User> findAll() {
-        return userRepository.findAll();
+    private User findUserEntityById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with Id: " + id));
+        return user;
     }
 
-    public User update(Long id, User updatedUser) {
-        User existingUser = findById(id);
+    public List<UserResponse> findAll() {
+        List<User> users = userRepository.findAll();
+        List<UserResponse> responseList = new ArrayList<>();
 
-        validateEmailForUpdate(updatedUser.getEmail(), existingUser);
-        existingUser.setName(updatedUser.getName());
-        existingUser.setEmail(updatedUser.getEmail());
-        return userRepository.save(existingUser);
+        for (User user : users) {
+            responseList.add(userMapper.toResponse(user));
+        }
+
+        return responseList;
+    }
+
+    public UserResponse update(Long id, ReplaceUserRequest request) {
+        User existingUser = findUserEntityById(id);
+
+        validateEmailForUpdate(request.email(), existingUser);
+
+        userMapper.replaceEntityFromRequest(request, existingUser);
+        User updatedUser = userRepository.save(existingUser);
+
+        return userMapper.toResponse(updatedUser);
     }
 
     private void validateEmailForUpdate(String newEmail, User existingUser) {
@@ -51,24 +77,21 @@ public class UserService {
         }
     }
 
-    public User patchUser(Long id, Map<String, Object> updates) {
-        User existingUser = findById(id);
+    public UserResponse patchUpdate(Long id, UpdateUserRequest request) {
+        User existingUser = findUserEntityById(id);
 
-        if (updates.containsKey("name")) {
-            existingUser.setName((String) updates.get("name"));
+        if (request.email() != null) {
+            validateEmailForUpdate(request.email(), existingUser);
         }
 
-        if (updates.containsKey("email")) {
-            String newEmail = (String) updates.get("email");
-            validateEmailForUpdate(newEmail, existingUser);
-            existingUser.setEmail(newEmail);
-        }
+        userMapper.updateEntityFromRequest(request, existingUser);
+        User updatedUser = userRepository.save(existingUser);
 
-        return userRepository.save(existingUser);
+        return userMapper.toResponse(updatedUser);
     }
 
     public void delete(Long id) {
-        User existingUser = findById(id);
+        User existingUser = findUserEntityById(id);
 
         if (loanRepository.existsByUserIdAndReturnDateIsNull(id)) {
             throw new IllegalArgumentException("Cannot delete user with active loans");

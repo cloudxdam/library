@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.pachedev.library.dto.book.BookResponse;
 import com.pachedev.library.dto.book.CreateBookRequest;
+import com.pachedev.library.dto.book.ReplaceBookRequest;
 import com.pachedev.library.dto.book.UpdateBookRequest;
 import com.pachedev.library.service.BookService;
 
@@ -58,7 +59,7 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateBook(@PathVariable Long id, @Valid @RequestBody UpdateBookRequest request) {
+    public ResponseEntity<?> updateBook(@PathVariable Long id, @Valid @RequestBody ReplaceBookRequest request) {
         try {
             BookResponse updatedBook = bookService.update(id, request);
             return ResponseEntity.ok(updatedBook);
