@@ -14,8 +14,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.pachedev.library.model.Loan;
+import com.pachedev.library.dto.loan.CreateLoanRequest;
+import com.pachedev.library.dto.loan.LoanResponse;
+import com.pachedev.library.dto.loan.UpdateLoanDateRequest;
 import com.pachedev.library.service.LoanService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/loans")
@@ -28,11 +32,13 @@ public class LoanController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createLoan(@RequestBody Loan newLoan) {
+    public ResponseEntity<?> createLoan(@Valid @RequestBody CreateLoanRequest request) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(loanService.create(newLoan));
+            return ResponseEntity.status(HttpStatus.CREATED).body(loanService.create(request));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -46,14 +52,15 @@ public class LoanController {
     }
 
     @GetMapping
-    public List<Loan> findAllLoans() {
+    public List<LoanResponse> findAllLoans() {
         return loanService.findAll();
+
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<?> updateLoanDate(@PathVariable Long id, @RequestBody Loan updatedLoan) {
+    @PatchMapping("/{id}/loan-date")
+    public ResponseEntity<?> updateLoanDate(@PathVariable Long id, @Valid @RequestBody UpdateLoanDateRequest request) {
         try {
-            return ResponseEntity.ok(loanService.updateLoanDate(id, updatedLoan));
+            return ResponseEntity.ok(loanService.updateLoanDate(id, request));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
