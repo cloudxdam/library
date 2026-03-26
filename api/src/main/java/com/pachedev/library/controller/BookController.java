@@ -16,8 +16,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.pachedev.library.model.Book;
+import com.pachedev.library.dto.book.BookResponse;
+import com.pachedev.library.dto.book.CreateBookRequest;
+import com.pachedev.library.dto.book.ReplaceBookRequest;
+import com.pachedev.library.dto.book.UpdateBookRequest;
 import com.pachedev.library.service.BookService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/books")
@@ -30,9 +35,10 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createBook(@RequestBody Book newBook) {
+    public ResponseEntity<?> createBook(@Valid @RequestBody CreateBookRequest request) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(bookService.create(newBook));
+            BookResponse createdBook = bookService.create(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdBook);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -48,14 +54,15 @@ public class BookController {
     }
 
     @GetMapping
-    public List<Book> findAllBooks() {
+    public List<BookResponse> findAllBooks() {
         return bookService.findAll();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateBook(@PathVariable Long id, @RequestBody Book updatedBook) {
+    public ResponseEntity<?> updateBook(@PathVariable Long id, @Valid @RequestBody ReplaceBookRequest request) {
         try {
-            return ResponseEntity.ok(bookService.update(id, updatedBook));
+            BookResponse updatedBook = bookService.update(id, request);
+            return ResponseEntity.ok(updatedBook);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
@@ -64,9 +71,10 @@ public class BookController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> patchBook(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<?> patchBook(@PathVariable Long id, @Valid @RequestBody UpdateBookRequest request) {
         try {
-            return ResponseEntity.ok(bookService.patchUpdate(id, updates));
+            BookResponse updatedBook = bookService.patchUpdate(id, request);
+            return ResponseEntity.ok(updatedBook);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
@@ -87,12 +95,12 @@ public class BookController {
     }
 
     @GetMapping("/search")
-    public List<Book> findBookByAuthorAndPages(@RequestParam String author, @RequestParam Integer pages) {
+    public List<BookResponse> findBookByAuthorAndPages(@RequestParam String author, @RequestParam Integer pages) {
         return bookService.findByAuthorAndPages(author, pages);
     }
 
     @GetMapping("/range")
-    public List<Book> findByPagesBetween(@RequestParam Integer min, @RequestParam Integer max) {
+    public List<BookResponse> findByPagesBetween(@RequestParam Integer min, @RequestParam Integer max) {
         return bookService.findByPagesBetween(min, max);
     }
 }

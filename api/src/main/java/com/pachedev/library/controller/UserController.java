@@ -15,8 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.pachedev.library.model.User;
+import com.pachedev.library.dto.user.CreateUserRequest;
+import com.pachedev.library.dto.user.ReplaceUserRequest;
+import com.pachedev.library.dto.user.UpdateUserRequest;
+import com.pachedev.library.dto.user.UserResponse;
 import com.pachedev.library.service.UserService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,9 +34,9 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody User newUser) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequest request) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(newUser));
+            return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -47,14 +52,14 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> findAllUsers() {
+    public List<UserResponse> findAllUsers() {
         return userService.findAll();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
+    public ResponseEntity<?> updateUser(@Valid @PathVariable Long id, @Valid @RequestBody ReplaceUserRequest request) {
         try {
-            return ResponseEntity.ok(userService.update(id, updatedUser));
+            return ResponseEntity.ok(userService.update(id, request));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
@@ -63,9 +68,9 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> patchUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<?> patchUser(@Valid @PathVariable Long id, @RequestBody UpdateUserRequest request) {
         try {
-            return ResponseEntity.ok(userService.patchUser(id, updates));
+            return ResponseEntity.ok(userService.patchUpdate(id, request));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {

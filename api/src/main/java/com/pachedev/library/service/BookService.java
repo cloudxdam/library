@@ -1,10 +1,15 @@
 package com.pachedev.library.service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.pachedev.library.dto.book.BookResponse;
+import com.pachedev.library.dto.book.CreateBookRequest;
+import com.pachedev.library.dto.book.ReplaceBookRequest;
+import com.pachedev.library.dto.book.UpdateBookRequest;
+import com.pachedev.library.mapper.BookMapper;
 import com.pachedev.library.model.Book;
 import com.pachedev.library.repository.BookRepository;
 
@@ -12,36 +17,51 @@ import com.pachedev.library.repository.BookRepository;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final BookMapper bookMapper;
 
-    public BookService(BookRepository bookRepository) {
+    public BookService(BookRepository bookRepository, BookMapper bookMapper) {
         this.bookRepository = bookRepository;
+        this.bookMapper = bookMapper;
     }
 
-    public Book create(Book newBook) {
-        if (bookRepository.existsByIsbn(newBook.getIsbn())) {
-            throw new IllegalArgumentException("A book with ISBN " + newBook.getIsbn() + " already exists");
+    public BookResponse create(CreateBookRequest request) {
+        if (bookRepository.existsByIsbn(request.isbn())) {
+            throw new IllegalArgumentException("A book with ISBN " + request.isbn() + " already exists");
         }
-        return bookRepository.save(newBook);
+
+        Book newBook = bookMapper.toEntity(request);
+        Book savedBook = bookRepository.save(newBook);
+        return bookMapper.toResponse(savedBook);
     }
 
-    public Book findById(Long id) {
-        return bookRepository.findById(id)
+    public BookResponse findById(Long id) {
+        Book book = findBookEntityById(id);
+        return bookMapper.toResponse(book);
+
+    }
+
+    public List<BookResponse> findAll() {
+        List<Book> books = bookRepository.findAll();
+        List<BookResponse> responseList = fillResponseList(books);
+
+        return responseList;
+    }
+
+    private Book findBookEntityById(Long id) {
+        Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+        return book;
     }
 
-    public List<Book> findAll() {
-        return bookRepository.findAll();
-    }
+    public BookResponse update(Long id, ReplaceBookRequest request) {
+        Book existingBook = findBookEntityById(id);
 
-    public Book update(Long id, Book updatedBook) {
-        Book existingBook = findById(id);
+        validateIsbnForUpdate(request.isbn(), existingBook);
 
-        validateIsbnForUpdate(updatedBook.getIsbn(), existingBook);
-        existingBook.setTitle(updatedBook.getTitle());
-        existingBook.setAuthor(updatedBook.getAuthor());
-        existingBook.setIsbn(updatedBook.getIsbn());
-        existingBook.setPages(updatedBook.getPages());
-        return bookRepository.save(existingBook);
+        bookMapper.replaceEntityFromRequest(request, existingBook);
+        Book updatedBook = bookRepository.save(existingBook);
+
+        return bookMapper.toResponse(updatedBook);
     }
 
     private void validateIsbnForUpdate(String newIsbn, Book existingBook) {
@@ -51,48 +71,46 @@ public class BookService {
         }
     }
 
-    public Book patchUpdate(Long id, Map<String, Object> updates) {
-        Book existingBook = findById(id);
+    public BookResponse patchUpdate(Long id, UpdateBookRequest request) {
+        Book existingBook = findBookEntityById(id);
 
-        if (updates.containsKey("title")) {
-            existingBook.setTitle((String) updates.get("title"));
+        if (request.isbn() != null) {
+            validateIsbnForUpdate(request.isbn(), existingBook);
         }
 
-        if (updates.containsKey("author")) {
-            existingBook.setAuthor((String) updates.get("author"));
-        }
+        bookMapper.updateEntityFromRequest(request, existingBook);
 
-        if (updates.containsKey("isbn")) {
-            String newIsbn = (String) updates.get("isbn");
-            validateIsbnForUpdate(newIsbn, existingBook);
-            existingBook.setIsbn(newIsbn);
-        }
-
-        if (updates.containsKey("pages")) {
-            Object value = updates.get("pages");
-
-            if (value instanceof Number) {
-                existingBook.setPages(((Number) value).intValue());
-            } else {
-                throw new IllegalArgumentException("Pages must be a number");
-            }
-        }
-
-        return bookRepository.save(existingBook);
-
+        Book updatedBook = bookRepository.save(existingBook);
+        return bookMapper.toResponse(updatedBook);
     }
 
     public void delete(Long id) {
-        Book existingBook = findById(id);
+        Book existingBook = findBookEntityById(id);
         bookRepository.delete(existingBook);
     }
 
-    public List<Book> findByAuthorAndPages(String author, Integer pages) {
-        return bookRepository.findByAuthorAndPages(author, pages);
+    public List<BookResponse> findByAuthorAndPages(String author, Integer pages) {
+
+        List<Book> books = bookRepository.findByAuthorAndPages(author, pages);
+        List<BookResponse> responseList = fillResponseList(books);
+
+        return responseList;
     }
 
-    public List<Book> findByPagesBetween(Integer min, Integer max) {
-        return bookRepository.findByPagesBetween(min, max);
+    private List<BookResponse> fillResponseList(List<Book> books) {
+        List<BookResponse> responseList = new ArrayList<>();
+
+        for (Book book : books) {
+            responseList.add(bookMapper.toResponse(book));
+        }
+        return responseList;
+    }
+
+    public List<BookResponse> findByPagesBetween(Integer min, Integer max) {
+        List<Book> books = bookRepository.findByPagesBetween(min, max);
+        List<BookResponse> responseList = fillResponseList(books);
+
+        return responseList;
     }
 
 }
