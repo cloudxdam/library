@@ -1,7 +1,6 @@
 package com.pachedev.library.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,60 +31,35 @@ public class LoanController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createLoan(@Valid @RequestBody CreateLoanRequest request) {
-        try {
+    public ResponseEntity<LoanResponse> createLoan(@Valid @RequestBody CreateLoanRequest request) {
             return ResponseEntity.status(HttpStatus.CREATED).body(loanService.create(request));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> findLoanById(@PathVariable Long id) {
-        try {
+    public ResponseEntity<LoanResponse> findLoanById(@PathVariable Long id) {
             return ResponseEntity.ok(loanService.findById(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
     }
 
     @GetMapping
-    public List<LoanResponse> findAllLoans() {
-        return loanService.findAll();
+    public ResponseEntity<List<LoanResponse>> findAllLoans() {
+        return ResponseEntity.ok(loanService.findAll());
 
     }
 
     @PatchMapping("/{id}/loan-date")
-    public ResponseEntity<?> updateLoanDate(@PathVariable Long id, @Valid @RequestBody UpdateLoanDateRequest request) {
-        try {
+    public ResponseEntity<LoanResponse> updateLoanDate(@PathVariable Long id, @Valid @RequestBody UpdateLoanDateRequest request) {
             return ResponseEntity.ok(loanService.updateLoanDate(id, request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+
     }
 
     @PatchMapping("/{id}/return")
-    public ResponseEntity<?> returnLoan(@PathVariable Long id) {
-        try {
+    public ResponseEntity<LoanResponse> returnLoan(@PathVariable Long id) {
             return ResponseEntity.ok(loanService.returnLoan(id));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteLoan(@PathVariable Long id) {
-        try {
+    public ResponseEntity<Void> deleteLoan(@PathVariable Long id) {
             loanService.delete(id);
             return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
     }
 }

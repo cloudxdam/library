@@ -1,7 +1,6 @@
 package com.pachedev.library.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,59 +34,33 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequest request) {
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> findUser(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(userService.findById(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(userService.findById(id));
     }
 
     @GetMapping
-    public List<UserResponse> findAllUsers() {
-        return userService.findAll();
+    public ResponseEntity<List<UserResponse>> findAllUsers() {
+        return ResponseEntity.ok(userService.findAll());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(@Valid @PathVariable Long id, @Valid @RequestBody ReplaceUserRequest request) {
-        try {
-            return ResponseEntity.ok(userService.update(id, request));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(userService.update(id, request));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> patchUser(@Valid @PathVariable Long id, @RequestBody UpdateUserRequest request) {
-        try {
-            return ResponseEntity.ok(userService.patchUpdate(id, request));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(userService.patchUpdate(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        try {
-            userService.delete(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
 }

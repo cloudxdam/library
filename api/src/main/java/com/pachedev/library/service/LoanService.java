@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.pachedev.library.dto.loan.CreateLoanRequest;
 import com.pachedev.library.dto.loan.LoanResponse;
 import com.pachedev.library.dto.loan.UpdateLoanDateRequest;
+import com.pachedev.library.exception.BusinessRuleException;
+import com.pachedev.library.exception.ResourceNotFoundException;
 import com.pachedev.library.mapper.LoanMapper;
 import com.pachedev.library.model.Book;
 import com.pachedev.library.model.Loan;
@@ -39,11 +41,11 @@ public class LoanService {
         Book book = findBookEntityById(request.bookId());
 
         if (loanRepository.existsByBookIdAndReturnDateIsNull(request.bookId())) {
-            throw new IllegalArgumentException("This book is already on loan");
+            throw new BusinessRuleException("This book is already on loan");
         }
 
         if (loanRepository.countByUserIdAndReturnDateIsNull(request.userId()) >= 3) {
-            throw new IllegalArgumentException("This user already has 3 active loans");
+            throw new BusinessRuleException("This user already has 3 active loans");
         }
 
         Loan newLoan = new Loan();
@@ -58,24 +60,24 @@ public class LoanService {
 
     public LoanResponse findById(Long id) {
         Loan loan = loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found with Id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Loan not found with Id: " + id));
 
         return loanMapper.toResponse(loan);
     }
 
     private Loan findLoanEntityById(Long id) {
         return loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found with Id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Loan not found with Id: " + id));
     }
 
     private Book findBookEntityById(Long id) {
         return bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found with Id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with Id: " + id));
     }
 
     private User findUserEntityById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with Id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with Id: " + id));
     }
 
     public List<LoanResponse> findAll() {
@@ -100,7 +102,7 @@ public class LoanService {
         Loan existingLoan = findLoanEntityById(id);
 
         if (existingLoan.getReturnDate() != null) {
-            throw new IllegalArgumentException("This loan has been already returned");
+            throw new BusinessRuleException("This loan has already been returned");
         }
         existingLoan.setReturnDate(LocalDate.now());
         Loan updatedLoan = loanRepository.save(existingLoan);
@@ -111,7 +113,7 @@ public class LoanService {
         Loan existingLoan = findLoanEntityById(id);
 
         if (existingLoan.getReturnDate() == null) {
-            throw new IllegalArgumentException("Cannot delete an active loan");
+            throw new BusinessRuleException("Cannot delete an active loan");
         }
         loanRepository.delete(existingLoan);
     }

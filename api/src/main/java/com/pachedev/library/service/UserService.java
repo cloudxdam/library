@@ -9,6 +9,9 @@ import com.pachedev.library.dto.user.CreateUserRequest;
 import com.pachedev.library.dto.user.ReplaceUserRequest;
 import com.pachedev.library.dto.user.UpdateUserRequest;
 import com.pachedev.library.dto.user.UserResponse;
+import com.pachedev.library.exception.BusinessRuleException;
+import com.pachedev.library.exception.DuplicateResourceException;
+import com.pachedev.library.exception.ResourceNotFoundException;
 import com.pachedev.library.mapper.UserMapper;
 import com.pachedev.library.model.User;
 import com.pachedev.library.repository.LoanRepository;
@@ -29,7 +32,7 @@ public class UserService {
 
     public UserResponse create(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("A user with email " + request.email() + " already exists");
+            throw new DuplicateResourceException("A user with email " + request.email() + " already exists");
         }
         User newUser = userMapper.toEntity(request);
         User savedUser = userRepository.save(newUser);
@@ -44,7 +47,7 @@ public class UserService {
 
     private User findUserEntityById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with Id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with Id: " + id));
         return user;
     }
 
@@ -73,7 +76,7 @@ public class UserService {
     private void validateEmailForUpdate(String newEmail, User existingUser) {
         if (!newEmail.equals(existingUser.getEmail())
                 && userRepository.existsByEmail(newEmail)) {
-            throw new IllegalArgumentException("A user with email " + newEmail + " already exists");
+            throw new DuplicateResourceException("A user with email " + newEmail + " already exists");
         }
     }
 
@@ -94,7 +97,7 @@ public class UserService {
         User existingUser = findUserEntityById(id);
 
         if (loanRepository.existsByUserIdAndReturnDateIsNull(id)) {
-            throw new IllegalArgumentException("Cannot delete user with active loans");
+            throw new BusinessRuleException("Cannot delete user with active loans");
         }
         userRepository.delete(existingUser);
     }

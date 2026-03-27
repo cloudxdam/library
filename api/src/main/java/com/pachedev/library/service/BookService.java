@@ -9,6 +9,8 @@ import com.pachedev.library.dto.book.BookResponse;
 import com.pachedev.library.dto.book.CreateBookRequest;
 import com.pachedev.library.dto.book.ReplaceBookRequest;
 import com.pachedev.library.dto.book.UpdateBookRequest;
+import com.pachedev.library.exception.DuplicateResourceException;
+import com.pachedev.library.exception.ResourceNotFoundException;
 import com.pachedev.library.mapper.BookMapper;
 import com.pachedev.library.model.Book;
 import com.pachedev.library.repository.BookRepository;
@@ -26,7 +28,7 @@ public class BookService {
 
     public BookResponse create(CreateBookRequest request) {
         if (bookRepository.existsByIsbn(request.isbn())) {
-            throw new IllegalArgumentException("A book with ISBN " + request.isbn() + " already exists");
+            throw new DuplicateResourceException("A book with ISBN " + request.isbn() + " already exists");
         }
 
         Book newBook = bookMapper.toEntity(request);
@@ -49,7 +51,7 @@ public class BookService {
 
     private Book findBookEntityById(Long id) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
         return book;
     }
 
@@ -67,7 +69,7 @@ public class BookService {
     private void validateIsbnForUpdate(String newIsbn, Book existingBook) {
         if (!newIsbn.equals(existingBook.getIsbn())
                 && bookRepository.existsByIsbn(newIsbn)) {
-            throw new IllegalArgumentException("A book with ISBN " + newIsbn + " already exists");
+            throw new DuplicateResourceException("A book with ISBN " + newIsbn + " already exists");
         }
     }
 
