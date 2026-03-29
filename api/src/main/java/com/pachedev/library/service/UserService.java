@@ -30,6 +30,9 @@ public class UserService {
         this.userMapper = userMapper;
     }
 
+    /**
+     * Creates a new user ensuring the email is unique.
+     */
     public UserResponse create(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("A user with email " + request.email() + " already exists");
@@ -62,6 +65,9 @@ public class UserService {
         return responseList;
     }
 
+    /**
+     * Updates a user validating that the new email is not duplicated.
+     */
     public UserResponse update(Long id, ReplaceUserRequest request) {
         User existingUser = findUserEntityById(id);
 
@@ -80,6 +86,9 @@ public class UserService {
         }
     }
 
+    /**
+     * Updates a user validating that the new email is not duplicated.
+     */
     public UserResponse patchUpdate(Long id, UpdateUserRequest request) {
         User existingUser = findUserEntityById(id);
 
@@ -93,6 +102,9 @@ public class UserService {
         return userMapper.toResponse(updatedUser);
     }
 
+    /**
+     * Deletes a user only if the user has no active loans.
+     */
     public void delete(Long id) {
         User existingUser = findUserEntityById(id);
 

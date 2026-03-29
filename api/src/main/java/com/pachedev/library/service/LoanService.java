@@ -35,6 +35,11 @@ public class LoanService {
         this.loanMapper = loanMapper;
     }
 
+    /**
+     * Creates a new loan applying business rules:
+     * - The book must not already be on loan
+     * - The user cannot have more than 3 active loans
+     */
     public LoanResponse create(CreateLoanRequest request) {
 
         User user = findUserEntityById(request.userId());
@@ -98,6 +103,10 @@ public class LoanService {
         return loanMapper.toResponse(savedLoan);
     }
 
+    /**
+     * Marks a loan as returned.
+     * Throws an exception if the loan has already been returned.
+     */
     public LoanResponse returnLoan(Long id) {
         Loan existingLoan = findLoanEntityById(id);
 
@@ -109,6 +118,9 @@ public class LoanService {
         return loanMapper.toResponse(updatedLoan);
     }
 
+    /**
+     * Deletes a loan only if it has already been returned.
+     */
     public void delete(Long id) {
         Loan existingLoan = findLoanEntityById(id);
 

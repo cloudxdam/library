@@ -26,6 +26,9 @@ public class BookService {
         this.bookMapper = bookMapper;
     }
 
+    /**
+     * Creates a new book ensuring the ISBN is unique.
+     */
     public BookResponse create(CreateBookRequest request) {
         if (bookRepository.existsByIsbn(request.isbn())) {
             throw new DuplicateResourceException("A book with ISBN " + request.isbn() + " already exists");
@@ -55,6 +58,9 @@ public class BookService {
         return book;
     }
 
+    /**
+     * Updates a book validating that the new ISBN is not duplicated.
+     */
     public BookResponse update(Long id, ReplaceBookRequest request) {
         Book existingBook = findBookEntityById(id);
 
@@ -73,6 +79,9 @@ public class BookService {
         }
     }
 
+    /**
+     * Updates a book validating that the new ISBN is not duplicated.
+     */
     public BookResponse patchUpdate(Long id, UpdateBookRequest request) {
         Book existingBook = findBookEntityById(id);
 
